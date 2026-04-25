@@ -23,6 +23,7 @@ import java.util.List;
 public class User implements UserDetails {
 
     // ✅ Auto generates U0001, U0002, U0003 ...
+
     @Id
     private String userId ;
 
