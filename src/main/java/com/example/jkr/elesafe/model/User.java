@@ -1,14 +1,14 @@
 package com.example.jkr.elesafe.model;
 
-
+import com.example.jkr.elesafe.model.WildOfficer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,10 +17,10 @@ import java.util.Collection;
 import java.util.List;
 
 @Data
-@Builder
+@SuperBuilder                    // ✅ use SuperBuilder for inheritance
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "users")
+@Document(collection = "users") // ✅ same collection for both
 public class User implements UserDetails {
 
     @Id
@@ -41,9 +41,14 @@ public class User implements UserDetails {
     private String village;
     private UserStatus status;
 
+    // ✅ badgeNumber and station REMOVED from here — now in WildOfficer
+
     @Schema(enumAsRef = true)
     public enum Role {
-        ADMIN, USER, MODERATOR , OFFICER
+        ADMIN,
+        USER,
+        MODERATOR,
+        WILD_OFFICER
     }
 
     @Schema(enumAsRef = true)

@@ -23,7 +23,7 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // POST /api/auth/register
+    // ONE method handles both USER and WILD_OFFICER
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
