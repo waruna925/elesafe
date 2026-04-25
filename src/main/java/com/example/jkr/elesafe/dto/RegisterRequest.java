@@ -1,6 +1,5 @@
 package com.example.jkr.elesafe.dto;
 
-
 import com.example.jkr.elesafe.model.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
@@ -50,4 +49,8 @@ public class RegisterRequest {
     private String address;
     private String district;
     private String village;
+
+    // ✅ Optional - only required when role = WILD_OFFICER
+    private String badgeNumber;
+    private String station;
 }

@@ -1,10 +1,12 @@
-package com.example.jkr.elesafe.service.impl; // <-- 1. Updated package path
+package com.example.jkr.elesafe.service.impl;
 
 import com.example.jkr.elesafe.dto.UserResponse;
 import com.example.jkr.elesafe.model.User;
+import com.example.jkr.elesafe.model.WildOfficer;
 import com.example.jkr.elesafe.repo.UserRepository;
-import com.example.jkr.elesafe.service.UserService; // <-- 2. New Import added
+import com.example.jkr.elesafe.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,11 +17,12 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserResponse getUserProfile(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
         return mapToUserResponse(user);
     }
 
@@ -37,8 +40,20 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+
+
+    // ✅ Get all Wild Officers only
+    @Override
+    public List<UserResponse> getAllWildOfficers() {
+        return userRepository.findAll()
+                .stream()
+                .filter(u -> u.getRole() == User.Role.WILD_OFFICER)
+                .map(this::mapToUserResponse)
+                .collect(Collectors.toList());
+    }
+
     private UserResponse mapToUserResponse(User user) {
-        return UserResponse.builder()
+        UserResponse.UserResponseBuilder builder = UserResponse.builder()
                 .userId(user.getUserId())
                 .nic(user.getNic())
                 .lastName(user.getLastName())
@@ -50,7 +65,14 @@ public class UserServiceImpl implements UserService {
                 .address(user.getAddress())
                 .district(user.getDistrict())
                 .village(user.getVillage())
-                .status(user.getStatus())
-                .build();
+                .status(user.getStatus());
+
+        // ✅ If it's a WildOfficer, add extra fields
+        if (user instanceof WildOfficer wildOfficer) {
+            builder.badgeNumber(wildOfficer.getBadgeNumber());
+            builder.station(wildOfficer.getStation());
+        }
+
+        return builder.build();
     }
 }
