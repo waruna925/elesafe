@@ -43,7 +43,7 @@ public class User implements UserDetails {
 
     @Schema(enumAsRef = true)
     public enum Role {
-        ADMIN, USER, MODERATOR
+        ADMIN, USER, MODERATOR , OFFICER
     }
 
     @Schema(enumAsRef = true)

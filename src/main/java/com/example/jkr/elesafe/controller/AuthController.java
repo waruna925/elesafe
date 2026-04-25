@@ -45,9 +45,5 @@ public class AuthController {
         return ResponseEntity.ok(authService.refreshToken(refreshToken));
     }
 
-    // GET /api/auth/me
-    @GetMapping("/me")
-    public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(authService.getUserProfile(userDetails.getUsername()));
-    }
+
 }
