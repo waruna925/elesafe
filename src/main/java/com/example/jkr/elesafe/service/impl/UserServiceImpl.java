@@ -63,7 +63,6 @@ public class UserServiceImpl implements UserService {
                 .phoneNumber(user.getPhoneNumber())
                 .gender(user.getGender())
                 .address(user.getAddress())
-                .district(user.getDistrict())
                 .village(user.getVillage())
                 .status(user.getStatus());
 

@@ -1,7 +1,5 @@
 package com.example.jkr.elesafe.service;
 
-
-
 import com.example.jkr.elesafe.dto.AuthResponse;
 import com.example.jkr.elesafe.dto.LoginRequest;
 import com.example.jkr.elesafe.dto.RegisterRequest;
@@ -10,10 +8,17 @@ import com.example.jkr.elesafe.model.User;
 import com.example.jkr.elesafe.model.WildOfficer;
 import com.example.jkr.elesafe.repo.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +28,19 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final MongoTemplate mongoTemplate; // ✅ inject MongoTemplate directly
+
+    // ✅ Generate U0001, U0002 ... persisted in MongoDB counters collection
+    private String generateUserId() {
+        Query query = new Query(Criteria.where("_id").is("userId"));
+        Update update = new Update().inc("seq", 1);
+        FindAndModifyOptions options = FindAndModifyOptions.options()
+                .returnNew(true)
+                .upsert(true);
+        Map result = mongoTemplate.findAndModify(query, update, options, Map.class, "counters");
+        long seq = result != null ? ((Number) result.get("seq")).longValue() : 1;
+        return String.format("U%04d", seq);
+    }
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -35,7 +53,6 @@ public class AuthService {
         User user;
 
         if (request.getRole() == User.Role.WILD_OFFICER) {
-            // ✅ Wild Officer — badgeNumber and station are REQUIRED
             if (request.getBadgeNumber() == null || request.getBadgeNumber().isBlank()) {
                 throw new RuntimeException("Badge number is required for Wild Officers");
             }
@@ -44,6 +61,7 @@ public class AuthService {
             }
 
             user = WildOfficer.builder()
+                    .userId(generateUserId())               // ✅ U0001, U0002...
                     .nic(request.getNic())
                     .lastName(request.getLastName())
                     .firstName(request.getFirstName())
@@ -53,15 +71,13 @@ public class AuthService {
                     .gender(request.getGender())
                     .password(passwordEncoder.encode(request.getPassword()))
                     .address(request.getAddress())
-                    .district(request.getDistrict())
                     .village(request.getVillage())
-                    .status(User.UserStatus.ACTIVE)
+                    .status(User.UserStatus.PENDING)
                     .badgeNumber(request.getBadgeNumber())
                     .station(request.getStation())
                     .build();
 
         } else {
-            // ✅ Normal User — badgeNumber and station are NOT ALLOWED
             if (request.getBadgeNumber() != null && !request.getBadgeNumber().isBlank()) {
                 throw new RuntimeException("Badge number is only allowed for Wild Officers");
             }
@@ -70,6 +86,7 @@ public class AuthService {
             }
 
             user = User.builder()
+                    .userId(generateUserId())               // ✅ U0003, U0004...
                     .nic(request.getNic())
                     .lastName(request.getLastName())
                     .firstName(request.getFirstName())
@@ -79,7 +96,6 @@ public class AuthService {
                     .gender(request.getGender())
                     .password(passwordEncoder.encode(request.getPassword()))
                     .address(request.getAddress())
-                    .district(request.getDistrict())
                     .village(request.getVillage())
                     .status(User.UserStatus.ACTIVE)
                     .build();
@@ -148,7 +164,6 @@ public class AuthService {
                 .phoneNumber(user.getPhoneNumber())
                 .gender(user.getGender())
                 .address(user.getAddress())
-                .district(user.getDistrict())
                 .village(user.getVillage())
                 .status(user.getStatus())
                 .build();

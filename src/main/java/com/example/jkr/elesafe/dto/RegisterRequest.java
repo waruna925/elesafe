@@ -47,7 +47,6 @@ public class RegisterRequest {
     private String password;
 
     private String address;
-    private String district;
     private String village;
 
     // ✅ Optional - only required when role = WILD_OFFICER
