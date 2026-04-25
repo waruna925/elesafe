@@ -1,6 +1,5 @@
 package com.example.jkr.elesafe.model;
 
-import com.example.jkr.elesafe.model.WildOfficer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,14 +16,17 @@ import java.util.Collection;
 import java.util.List;
 
 @Data
-@SuperBuilder                    // ✅ use SuperBuilder for inheritance
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "users") // ✅ same collection for both
+@Document(collection = "users")
 public class User implements UserDetails {
 
+    // ✅ Auto generates U0001, U0002, U0003 ...
+
     @Id
-    private String userId;
+    private String userId ;
+
     private String nic;
     private String lastName;
     private String firstName;
@@ -37,18 +39,12 @@ public class User implements UserDetails {
     private Gender gender;
     private String password;
     private String address;
-    private String district;
     private String village;
     private UserStatus status;
 
-    // ✅ badgeNumber and station REMOVED from here — now in WildOfficer
-
     @Schema(enumAsRef = true)
     public enum Role {
-        ADMIN,
-        USER,
-        MODERATOR,
-        WILD_OFFICER
+        ADMIN, USER, MODERATOR, WILD_OFFICER
     }
 
     @Schema(enumAsRef = true)

@@ -23,7 +23,6 @@ public class UserResponse {
     private String phoneNumber;
     private User.Gender gender;
     private String address;
-    private String district;
     private String village;
     private User.UserStatus status;
 
