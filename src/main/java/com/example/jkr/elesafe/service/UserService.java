@@ -8,5 +8,8 @@ public interface UserService {
     UserResponse getUserProfile(String email);
     User getUserByNic(String nic);
     List<UserResponse> getAllUsers();
-    List<UserResponse> getAllWildOfficers();  // ✅ keep this
+    List<UserResponse> getAllWildOfficers();
+
+    // ✅ This must be here to match your Impl
+    void updateUserStatus(String userId, User.UserStatus status);
 }

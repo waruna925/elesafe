@@ -1,12 +1,11 @@
 package com.example.jkr.elesafe.controller;
 
 import com.example.jkr.elesafe.dto.UserResponse;
+import com.example.jkr.elesafe.model.User;
 import com.example.jkr.elesafe.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,29 +22,55 @@ public class UserController {
 
     private final UserService userService;
 
-    // ✅ Any logged-in user - own profile only
+    /**
+     * ✅ FEATURE: Get Logged-in User Profile
+     * Accessible by any authenticated user to view their own data.
+     */
     @Operation(summary = "Get my profile")
     @GetMapping("/getMyProfile")
     public ResponseEntity<UserResponse> getMyProfile(
             @AuthenticationPrincipal UserDetails userDetails) {
+        // [cite: 55, 133, 197]
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getUsername()));
     }
 
-    // ✅ ADMIN only - get all users
+    /**
+     * ✅ FEATURE: Get All Users (Admin Only)
+     * Useful for high-level system overview.
+     */
     @Operation(summary = "Get all users - Admin only")
     @GetMapping("/getAllUsers")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')") // [cite: 56, 121]
     public ResponseEntity<List<UserResponse>> getAllUsers() {
+        // [cite: 133, 199]
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-
-
-    // ✅ ADMIN only - get all wild officers
+    /**
+     * ✅ FEATURE: Get All Wild Officers (Admin Only)
+     * Specifically lists officers for verification purposes.
+     */
     @Operation(summary = "Get all Wild Officers - Admin only")
     @GetMapping("/getAllWildOfficers")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')") // [cite: 57, 121]
     public ResponseEntity<List<UserResponse>> getAllWildOfficers() {
+        // [cite: 133, 200]
         return ResponseEntity.ok(userService.getAllWildOfficers());
+    }
+
+    /**
+     * ✅ FEATURE: Activate/Update User Status (Admin Only)
+     * Use this to move Wild Officers from 'PENDING' to 'ACTIVE'.
+     */
+    @Operation(summary = "Update user status - Admin only")
+    @PatchMapping("/{userId}/status")
+    @PreAuthorize("hasRole('ADMIN')") //
+    public ResponseEntity<String> updateUserStatus(
+            @PathVariable String userId,
+            @RequestParam User.UserStatus status) {
+
+        // [cite: 133, 136, 204]
+        userService.updateUserStatus(userId, status);
+        return ResponseEntity.ok("User " + userId + " status updated to " + status);
     }
 }
