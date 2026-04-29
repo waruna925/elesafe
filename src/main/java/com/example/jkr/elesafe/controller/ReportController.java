@@ -1,6 +1,7 @@
 package com.example.jkr.elesafe.controller;
 
 import com.example.jkr.elesafe.dto.DamageReportRequest;
+import com.example.jkr.elesafe.dto.ReportStatusUpdateRequest;
 import com.example.jkr.elesafe.dto.SightingReportRequest;
 import com.example.jkr.elesafe.model.DamageReport;
 import com.example.jkr.elesafe.model.Report;
@@ -9,6 +10,7 @@ import com.example.jkr.elesafe.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -22,45 +24,58 @@ public class ReportController {
 
     private final ReportService reportService;
 
-    /**
-     * FEATURE 1: Submit a Sighting Report
-     * Endpoint: POST /api/reports/sighting
-     */
     @PostMapping("/sighting")
     public ResponseEntity<SightingReport> createSightingReport(
             @RequestBody SightingReportRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-
         String secureReporterEmail = userDetails.getUsername();
         SightingReport savedReport = reportService.submitSightingReport(request, secureReporterEmail);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedReport);
     }
 
-    /**
-     * FEATURE 2: Submit a Damage Report
-     * Endpoint: POST /api/reports/damage
-     */
     @PostMapping("/damage")
     public ResponseEntity<DamageReport> createDamageReport(
             @RequestBody DamageReportRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-
         String secureReporterEmail = userDetails.getUsername();
         DamageReport savedReport = reportService.submitDamageReport(request, secureReporterEmail);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedReport);
     }
 
-    /**
-     * FEATURE 3: Get My Reports
-     * Endpoint: GET /api/reports/my-reports
-
     @GetMapping("/my-reports")
     public ResponseEntity<List<Report>> getMyReports(
             @AuthenticationPrincipal UserDetails userDetails) {
-
         String secureReporterEmail = userDetails.getUsername();
         List<Report> myReports = reportService.getMyReports(secureReporterEmail);
         return ResponseEntity.ok(myReports);
     }
-     */
+
+    @DeleteMapping("/{reportId}")
+    public ResponseEntity<String> deleteMyReport(
+            @PathVariable String reportId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        String secureReporterEmail = userDetails.getUsername();
+        reportService.deleteMyReport(reportId, secureReporterEmail);
+        return ResponseEntity.ok("Report " + reportId + " deleted successfully.");
+    }
+
+    @PreAuthorize("hasRole('WILD_OFFICER')")
+    @PatchMapping("/damage/{reportId}/status")
+    public ResponseEntity<DamageReport> updateDamageStatus(
+            @PathVariable String reportId,
+            @RequestBody ReportStatusUpdateRequest request) {
+        DamageReport updatedReport = reportService.updateDamageReportStatus(reportId, request.getStatus());
+        return ResponseEntity.ok(updatedReport);
+    }
+
+    @PreAuthorize("hasAnyRole('WILD_OFFICER', 'ADMIN')")
+    @GetMapping("/village/{village}")
+    public ResponseEntity<List<Report>> getReportsByVillage(@PathVariable String village) {
+        return ResponseEntity.ok(reportService.getReportsByVillage(village));
+    }
+
+    @GetMapping("/recent")
+    public ResponseEntity<List<Report>> getRecentReports() {
+        return ResponseEntity.ok(reportService.getRecentReports());
+    }
 }

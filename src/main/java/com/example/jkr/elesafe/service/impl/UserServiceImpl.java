@@ -6,7 +6,6 @@ import com.example.jkr.elesafe.model.WildOfficer;
 import com.example.jkr.elesafe.repo.UserRepository;
 import com.example.jkr.elesafe.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,7 +16,6 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserResponse getUserProfile(String email) {
@@ -40,9 +38,6 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
-
-
-    // ✅ Get all Wild Officers only
     @Override
     public List<UserResponse> getAllWildOfficers() {
         return userRepository.findAll()
@@ -50,6 +45,15 @@ public class UserServiceImpl implements UserService {
                 .filter(u -> u.getRole() == User.Role.WILD_OFFICER)
                 .map(this::mapToUserResponse)
                 .collect(Collectors.toList());
+    }
+
+    // ✅ Logic to update status (Admin Action)
+    @Override
+    public void updateUserStatus(String userId, User.UserStatus status) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        user.setStatus(status);
+        userRepository.save(user);
     }
 
     private UserResponse mapToUserResponse(User user) {
@@ -66,7 +70,7 @@ public class UserServiceImpl implements UserService {
                 .village(user.getVillage())
                 .status(user.getStatus());
 
-        // ✅ If it's a WildOfficer, add extra fields
+        // ✅ Check if user is actually a WildOfficer to map extra fields
         if (user instanceof WildOfficer wildOfficer) {
             builder.badgeNumber(wildOfficer.getBadgeNumber());
             builder.station(wildOfficer.getStation());

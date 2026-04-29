@@ -20,4 +20,6 @@ public interface ReportRepository extends MongoRepository<Report, String> {
 
     //Get all reports ordered by the most recent first (Using your new 'dateTime' field)
     List<Report> findAllByOrderByDateTimeDesc();
+
+
 }
