@@ -17,7 +17,6 @@ public class DamageReport extends Report {
 
     private DamageType damageType;
     private String description;
-    private double estimatedValueRs;
     private String imagePath;
     private ReportStatus status;
 
