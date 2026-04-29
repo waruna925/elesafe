@@ -11,6 +11,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
+import com.example.jkr.elesafe.dto.DamageReportRequest;
+import com.example.jkr.elesafe.model.DamageReport;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -45,6 +47,26 @@ public class ReportServiceImpl implements ReportService {
                 // Auto-fill the exact current time if the mobile app didn't send one
                 .dateTime(request.getDateTime() != null ? request.getDateTime() : LocalDateTime.now())
                 .build();
+        return reportRepository.save(report);
+    }
+    @Override
+    public DamageReport submitDamageReport(DamageReportRequest request, String reporterEmail) {
+
+        // 1. Map the DTO to the Database Entity
+        DamageReport report = DamageReport.builder()
+                .reportId(generateReportId())
+                .reporterId(reporterEmail)
+                .district(request.getDistrict())
+                .village(request.getVillage())
+                .damageType(request.getDamageType())
+                .description(request.getDescription())
+                .imagePath(request.getImagePath())
+                .dateTime(request.getDateTime() != null ? request.getDateTime() : LocalDateTime.now())
+                // 2. ENFORCE THE BUSINESS RULE: All new damage reports start as PENDING
+                .status(DamageReport.ReportStatus.PENDING)
+                .build();
+
+        // 3. Save to Database
         return reportRepository.save(report);
     }
 }
