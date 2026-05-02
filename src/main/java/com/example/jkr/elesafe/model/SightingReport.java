@@ -19,6 +19,9 @@ public class SightingReport extends Report {
     private ElephantBehavior behavior;
     private String additionalNotes;
 
+    // ✅ ADD THIS
+    private String imagePath;
+
     public enum ElephantBehavior {
         CALM, AGGRESSIVE, MOVING, FEEDING
     }

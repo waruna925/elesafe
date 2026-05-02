@@ -14,19 +14,15 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class SightingReportRequest {
 
-    // Location
     private String district;
     private String village;
-
-    // ✅ ADD THESE TWO FIELDS
     private Double latitude;
     private Double longitude;
-
-    // Sighting Details
     private int numberOfElephants;
     private SightingReport.ElephantBehavior behavior;
     private String additionalNotes;
-
-    // Optional: The app can send a specific time, or the server will auto-fill it
     private LocalDateTime dateTime;
+
+    // ✅ ADD THIS
+    private String imagePath;
 }
