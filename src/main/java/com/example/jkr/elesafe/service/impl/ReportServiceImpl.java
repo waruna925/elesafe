@@ -34,6 +34,7 @@ public class ReportServiceImpl implements ReportService {
         return String.format("R%03d", seq);
     }
 
+    // FIND this method and replace it:
     @Override
     public SightingReport submitSightingReport(SightingReportRequest request, String reporterEmail) {
         SightingReport report = SightingReport.builder()
@@ -41,6 +42,9 @@ public class ReportServiceImpl implements ReportService {
                 .reporterId(reporterEmail)
                 .district(request.getDistrict())
                 .village(request.getVillage())
+                // ✅ ADD THESE TWO LINES
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
                 .numberOfElephants(request.getNumberOfElephants())
                 .behavior(request.getBehavior())
                 .additionalNotes(request.getAdditionalNotes())

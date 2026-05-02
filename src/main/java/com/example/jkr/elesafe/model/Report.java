@@ -22,4 +22,8 @@ public abstract class Report {
     private String district;
     private String village;
     private LocalDateTime dateTime;
+
+    // ✅ ADD THESE TWO FIELDS
+    private Double latitude;
+    private Double longitude;
 }

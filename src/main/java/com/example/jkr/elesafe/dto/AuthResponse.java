@@ -1,6 +1,5 @@
 package com.example.jkr.elesafe.dto;
 
-
 import com.example.jkr.elesafe.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,4 +23,12 @@ public class AuthResponse {
     private String lastName;
     private User.Role role;
     private User.UserStatus status;
+
+    // from previous steps
+    private String nic;
+    private String phoneNumber;
+    private String village;
+
+    // ✅ NEW
+    private String profilePicture;
 }

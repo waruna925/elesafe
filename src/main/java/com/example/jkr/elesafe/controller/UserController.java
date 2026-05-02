@@ -1,5 +1,6 @@
 package com.example.jkr.elesafe.controller;
 
+import com.example.jkr.elesafe.dto.UpdateProfileRequest;
 import com.example.jkr.elesafe.dto.UserResponse;
 import com.example.jkr.elesafe.model.User;
 import com.example.jkr.elesafe.service.UserService;
@@ -72,5 +73,14 @@ public class UserController {
         // [cite: 133, 136, 204]
         userService.updateUserStatus(userId, status);
         return ResponseEntity.ok("User " + userId + " status updated to " + status);
+    }
+
+    @Operation(summary = "Update my profile")
+    @PatchMapping("/updateMyProfile")
+    public ResponseEntity<UserResponse> updateMyProfile(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody UpdateProfileRequest request) {
+        UserResponse updated = userService.updateMyProfile(userDetails.getUsername(), request);
+        return ResponseEntity.ok(updated);
     }
 }

@@ -25,6 +25,7 @@ public class UserResponse {
     private String address;
     private String village;
     private User.UserStatus status;
+    private String profilePicture;
 
     // ✅ Wild Officer fields (null for regular users)
     private String badgeNumber;

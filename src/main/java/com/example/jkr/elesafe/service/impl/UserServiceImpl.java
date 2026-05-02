@@ -1,5 +1,6 @@
 package com.example.jkr.elesafe.service.impl;
 
+import com.example.jkr.elesafe.dto.UpdateProfileRequest;
 import com.example.jkr.elesafe.dto.UserResponse;
 import com.example.jkr.elesafe.model.User;
 import com.example.jkr.elesafe.model.WildOfficer;
@@ -47,7 +48,6 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
-    // ✅ Logic to update status (Admin Action)
     @Override
     public void updateUserStatus(String userId, User.UserStatus status) {
         User user = userRepository.findById(userId)
@@ -56,6 +56,36 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    // ✅ NEW — update profile fields including profilePicture
+    @Override
+    public UserResponse updateMyProfile(String email, UpdateProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+
+        if (request.getFirstName() != null && !request.getFirstName().isBlank())
+            user.setFirstName(request.getFirstName());
+
+        if (request.getLastName() != null && !request.getLastName().isBlank())
+            user.setLastName(request.getLastName());
+
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank())
+            user.setPhoneNumber(request.getPhoneNumber());
+
+        if (request.getVillage() != null && !request.getVillage().isBlank())
+            user.setVillage(request.getVillage());
+
+        if (request.getAddress() != null && !request.getAddress().isBlank())
+            user.setAddress(request.getAddress());
+
+        // ✅ Save the Supabase public URL into MongoDB
+        if (request.getProfilePicture() != null && !request.getProfilePicture().isBlank())
+            user.setProfilePicture(request.getProfilePicture());
+
+        userRepository.save(user);
+        return mapToUserResponse(user);
+    }
+
+    // ✅ profilePicture added here so it's returned in every API response
     private UserResponse mapToUserResponse(User user) {
         UserResponse.UserResponseBuilder builder = UserResponse.builder()
                 .userId(user.getUserId())
@@ -68,9 +98,9 @@ public class UserServiceImpl implements UserService {
                 .gender(user.getGender())
                 .address(user.getAddress())
                 .village(user.getVillage())
-                .status(user.getStatus());
+                .status(user.getStatus())
+                .profilePicture(user.getProfilePicture());  // ✅ THIS is the new line
 
-        // ✅ Check if user is actually a WildOfficer to map extra fields
         if (user instanceof WildOfficer wildOfficer) {
             builder.badgeNumber(wildOfficer.getBadgeNumber());
             builder.station(wildOfficer.getStation());

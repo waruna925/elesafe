@@ -41,6 +41,8 @@ public class User implements UserDetails {
     private String address;
     private String village;
     private UserStatus status;
+    private String profilePicture;
+
 
     @Schema(enumAsRef = true)
     public enum Role {

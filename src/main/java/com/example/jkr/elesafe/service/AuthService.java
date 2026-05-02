@@ -28,9 +28,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final MongoTemplate mongoTemplate; // ✅ inject MongoTemplate directly
+    private final MongoTemplate mongoTemplate;
 
-    // ✅ Generate U0001, U0002 ... persisted in MongoDB counters collection
     private String generateUserId() {
         Query query = new Query(Criteria.where("_id").is("userId"));
         Update update = new Update().inc("seq", 1);
@@ -61,7 +60,7 @@ public class AuthService {
             }
 
             user = WildOfficer.builder()
-                    .userId(generateUserId())               // ✅ U0001, U0002...
+                    .userId(generateUserId())
                     .nic(request.getNic())
                     .lastName(request.getLastName())
                     .firstName(request.getFirstName())
@@ -86,7 +85,7 @@ public class AuthService {
             }
 
             user = User.builder()
-                    .userId(generateUserId())               // ✅ U0003, U0004...
+                    .userId(generateUserId())
                     .nic(request.getNic())
                     .lastName(request.getLastName())
                     .firstName(request.getFirstName())
@@ -138,6 +137,7 @@ public class AuthService {
         return mapToUserResponse(user);
     }
 
+    // ✅ THIS is the method where profilePicture (and nic, phoneNumber, village) are added
     private AuthResponse buildAuthResponse(User user, String accessToken, String refreshToken) {
         return AuthResponse.builder()
                 .accessToken(accessToken)
@@ -150,6 +150,11 @@ public class AuthService {
                 .lastName(user.getLastName())
                 .role(user.getRole())
                 .status(user.getStatus())
+                // ✅ these 4 lines are what Step 8 was referring to
+                .nic(user.getNic())
+                .phoneNumber(user.getPhoneNumber())
+                .village(user.getVillage())
+                .profilePicture(user.getProfilePicture())   // ← THIS is the new line
                 .build();
     }
 
