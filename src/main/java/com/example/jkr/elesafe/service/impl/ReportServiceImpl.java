@@ -1,6 +1,7 @@
 package com.example.jkr.elesafe.service.impl;
 
 import com.example.jkr.elesafe.dto.DamageReportRequest;
+import com.example.jkr.elesafe.dto.SightingAlertDTO;
 import com.example.jkr.elesafe.dto.SightingReportRequest;
 import com.example.jkr.elesafe.model.DamageReport;
 import com.example.jkr.elesafe.model.Report;
@@ -13,7 +14,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +27,7 @@ public class ReportServiceImpl implements ReportService {
 
     private final ReportRepository reportRepository;
     private final MongoTemplate mongoTemplate;
+    private final SimpMessagingTemplate messagingTemplate;
 
     private String generateReportId() {
         Query query = new Query(Criteria.where("_id").is("reportId"));
@@ -34,7 +38,6 @@ public class ReportServiceImpl implements ReportService {
         return String.format("R%03d", seq);
     }
 
-    // FIND this method and replace it:
     @Override
     public SightingReport submitSightingReport(SightingReportRequest request, String reporterEmail) {
         SightingReport report = SightingReport.builder()
@@ -42,15 +45,33 @@ public class ReportServiceImpl implements ReportService {
                 .reporterId(reporterEmail)
                 .district(request.getDistrict())
                 .village(request.getVillage())
-                // ✅ ADD THESE TWO LINES
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .numberOfElephants(request.getNumberOfElephants())
                 .behavior(request.getBehavior())
                 .additionalNotes(request.getAdditionalNotes())
+                // ✅ ADD THIS
+                .imagePath(request.getImagePath())
                 .dateTime(request.getDateTime() != null ? request.getDateTime() : LocalDateTime.now())
                 .build();
-        return reportRepository.save(report);
+
+        SightingReport saved = reportRepository.save(report);
+
+        SightingAlertDTO alert = SightingAlertDTO.builder()
+                .reportId(saved.getReportId())
+                .reporterId(saved.getReporterId())
+                .district(saved.getDistrict())
+                .village(saved.getVillage())
+                .latitude(saved.getLatitude())
+                .longitude(saved.getLongitude())
+                .numberOfElephants(saved.getNumberOfElephants())
+                .behavior(saved.getBehavior())
+                .additionalNotes(saved.getAdditionalNotes())
+                .dateTime(saved.getDateTime())
+                .build();
+
+        messagingTemplate.convertAndSend("/topic/alerts", alert);
+        return saved;
     }
 
     @Override
@@ -78,8 +99,9 @@ public class ReportServiceImpl implements ReportService {
     public void deleteMyReport(String reportId, String reporterEmail) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found!"));
+
         if (!report.getReporterId().equals(reporterEmail)) {
-            throw new RuntimeException("Security Alert: You do not have permission to delete this report!");
+            throw new RuntimeException("Security Alert: Unauthorized deletion attempt!");
         }
         reportRepository.deleteById(reportId);
     }
@@ -88,8 +110,8 @@ public class ReportServiceImpl implements ReportService {
     public DamageReport updateDamageReportStatus(String reportId, DamageReport.ReportStatus newStatus) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found!"));
-        if (report instanceof DamageReport) {
-            DamageReport damageReport = (DamageReport) report;
+
+        if (report instanceof DamageReport damageReport) {
             damageReport.setStatus(newStatus);
             return reportRepository.save(damageReport);
         } else {
@@ -105,5 +127,11 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public List<Report> getRecentReports() {
         return reportRepository.findAllByOrderByDateTimeDesc();
+    }
+
+    @Override
+    public Report getReportById(String reportId) {
+        return reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found with ID: " + reportId));
     }
 }

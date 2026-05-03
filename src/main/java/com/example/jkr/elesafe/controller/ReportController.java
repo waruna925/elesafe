@@ -50,6 +50,22 @@ public class ReportController {
         return ResponseEntity.ok(myReports);
     }
 
+    @GetMapping("/recent")
+    public ResponseEntity<List<Report>> getRecentReports() {
+        return ResponseEntity.ok(reportService.getRecentReports());
+    }
+
+    @PreAuthorize("hasAnyRole('WILD_OFFICER', 'ADMIN')")
+    @GetMapping("/village/{village}")
+    public ResponseEntity<List<Report>> getReportsByVillage(@PathVariable String village) {
+        return ResponseEntity.ok(reportService.getReportsByVillage(village));
+    }
+
+    @GetMapping("/{reportId}")
+    public ResponseEntity<Report> getReportById(@PathVariable String reportId) {
+        return ResponseEntity.ok(reportService.getReportById(reportId));
+    }
+
     @DeleteMapping("/{reportId}")
     public ResponseEntity<String> deleteMyReport(
             @PathVariable String reportId,
@@ -66,16 +82,5 @@ public class ReportController {
             @RequestBody ReportStatusUpdateRequest request) {
         DamageReport updatedReport = reportService.updateDamageReportStatus(reportId, request.getStatus());
         return ResponseEntity.ok(updatedReport);
-    }
-
-    @PreAuthorize("hasAnyRole('WILD_OFFICER', 'ADMIN')")
-    @GetMapping("/village/{village}")
-    public ResponseEntity<List<Report>> getReportsByVillage(@PathVariable String village) {
-        return ResponseEntity.ok(reportService.getReportsByVillage(village));
-    }
-
-    @GetMapping("/recent")
-    public ResponseEntity<List<Report>> getRecentReports() {
-        return ResponseEntity.ok(reportService.getRecentReports());
     }
 }
