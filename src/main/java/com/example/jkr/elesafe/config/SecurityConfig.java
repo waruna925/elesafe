@@ -31,6 +31,7 @@ public class SecurityConfig {
             "/api/auth/register",       // ✅ only public auth endpoints
             "/api/auth/login",
             "/api/auth/refresh-token",
+            "/ws/**",
             "/v3/api-docs",
             "/v3/api-docs/**",
             "/v3/api-docs.yaml",
