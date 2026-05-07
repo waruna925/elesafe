@@ -18,4 +18,5 @@ public class SightingAlertDTO {
     private SightingReport.ElephantBehavior behavior;
     private String additionalNotes;
     private LocalDateTime dateTime;
+    private String imagePath;
 }
