@@ -68,6 +68,7 @@ public class ReportServiceImpl implements ReportService {
                 .behavior(saved.getBehavior())
                 .additionalNotes(saved.getAdditionalNotes())
                 .dateTime(saved.getDateTime())
+                .imagePath(saved.getImagePath())
                 .build();
 
         messagingTemplate.convertAndSend("/topic/alerts", alert);
