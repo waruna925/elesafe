@@ -26,20 +26,18 @@ public class User implements UserDetails {
 
     @Id
     private String userId ;
-
     private String nic;
     private String lastName;
     private String firstName;
     private Role role;
-
     @Indexed(unique = true)
     private String email;
-
     private String phoneNumber;
     private Gender gender;
     private String password;
     private String address;
     private String village;
+    private String district;
     private UserStatus status;
     private String profilePicture;
 

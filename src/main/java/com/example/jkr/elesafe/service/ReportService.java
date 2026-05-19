@@ -17,4 +17,18 @@ public interface ReportService {
     List<Report> getReportsByVillage(String village);
     List<Report> getRecentReports();
     Report getReportById(String reportId);
+
+    /**
+     * Returns all reports whose district matches the authenticated officer's
+     * registered district. Throws AccessDeniedException if the officer's
+     * profile has no district set.
+     */
+    List<Report> getReportsByOfficerDistrict(String officerEmail);
+
+    /**
+     * Returns reports for a specific district only if the requesting officer's
+     * registered district matches the requested district.
+     * Throws AccessDeniedException on mismatch.
+     */
+    List<Report> getReportsByDistrict(String requestedDistrict, String officerEmail);
 }

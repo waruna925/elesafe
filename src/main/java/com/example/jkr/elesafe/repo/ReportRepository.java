@@ -12,7 +12,7 @@ public interface ReportRepository extends MongoRepository<Report, String> {
     // find by nic
     List<Report> findByReporterId(String reporterId);
 
-    // Get all reports in a specific district (Great for regional Wild Officers)
+    // Get all reports in a specific district (used for Wild Officer duty-area enforcement)
     List<Report> findByDistrict(String district);
 
     //Get all reports in a specific village (Great for Villager map warnings)

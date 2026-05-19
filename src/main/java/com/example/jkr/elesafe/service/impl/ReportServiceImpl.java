@@ -6,7 +6,9 @@ import com.example.jkr.elesafe.dto.SightingReportRequest;
 import com.example.jkr.elesafe.model.DamageReport;
 import com.example.jkr.elesafe.model.Report;
 import com.example.jkr.elesafe.model.SightingReport;
+import com.example.jkr.elesafe.model.User;
 import com.example.jkr.elesafe.repo.ReportRepository;
+import com.example.jkr.elesafe.repo.UserRepository;
 import com.example.jkr.elesafe.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -15,6 +17,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,6 +31,7 @@ public class ReportServiceImpl implements ReportService {
     private final ReportRepository reportRepository;
     private final MongoTemplate mongoTemplate;
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserRepository userRepository;
 
     private String generateReportId() {
         Query query = new Query(Criteria.where("_id").is("reportId"));
@@ -36,6 +40,22 @@ public class ReportServiceImpl implements ReportService {
         Map result = mongoTemplate.findAndModify(query, update, options, Map.class, "counters");
         long seq = result != null ? ((Number) result.get("seq")).longValue() : 1;
         return String.format("R%03d", seq);
+    }
+
+    /**
+     * Resolves the registered district of the officer identified by email.
+     * Throws AccessDeniedException when the profile has no district configured.
+     */
+    private String resolveOfficerDistrict(String officerEmail) {
+        User officer = userRepository.findByEmail(officerEmail)
+                .orElseThrow(() -> new RuntimeException("Officer account not found: " + officerEmail));
+
+        String district = officer.getDistrict();
+        if (district == null || district.isBlank()) {
+            throw new AccessDeniedException(
+                    "Your account has no duty district assigned. Please contact an administrator.");
+        }
+        return district;
     }
 
     @Override
@@ -50,7 +70,6 @@ public class ReportServiceImpl implements ReportService {
                 .numberOfElephants(request.getNumberOfElephants())
                 .behavior(request.getBehavior())
                 .additionalNotes(request.getAdditionalNotes())
-                // ✅ ADD THIS
                 .imagePath(request.getImagePath())
                 .dateTime(request.getDateTime() != null ? request.getDateTime() : LocalDateTime.now())
                 .build();
@@ -134,5 +153,35 @@ public class ReportServiceImpl implements ReportService {
     public Report getReportById(String reportId) {
         return reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found with ID: " + reportId));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // District-based duty-area access control
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Override
+    public List<Report> getReportsByOfficerDistrict(String officerEmail) {
+        String district = resolveOfficerDistrict(officerEmail);
+        return reportRepository.findByDistrict(district);
+    }
+
+    @Override
+    public List<Report> getReportsByDistrict(String requestedDistrict, String officerEmail) {
+        String officerDistrict = resolveOfficerDistrict(officerEmail);
+
+        // Admins bypass the district restriction — their role check is handled
+        // by @PreAuthorize at the controller level; here we enforce officer scope.
+        User officer = userRepository.findByEmail(officerEmail)
+                .orElseThrow(() -> new RuntimeException("Officer account not found"));
+
+        boolean isAdmin = officer.getRole() == User.Role.ADMIN;
+
+        if (!isAdmin && !officerDistrict.equalsIgnoreCase(requestedDistrict)) {
+            throw new AccessDeniedException(
+                    "Access denied: you are assigned to '" + officerDistrict
+                            + "' and cannot access reports for '" + requestedDistrict + "'.");
+        }
+
+        return reportRepository.findByDistrict(requestedDistrict);
     }
 }

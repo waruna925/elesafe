@@ -71,6 +71,7 @@ public class AuthService {
                     .password(passwordEncoder.encode(request.getPassword()))
                     .address(request.getAddress())
                     .village(request.getVillage())
+                    .district(request.getDistrict())
                     .status(User.UserStatus.PENDING)
                     .badgeNumber(request.getBadgeNumber())
                     .station(request.getStation())
@@ -96,6 +97,7 @@ public class AuthService {
                     .password(passwordEncoder.encode(request.getPassword()))
                     .address(request.getAddress())
                     .village(request.getVillage())
+                    .district(request.getDistrict())
                     .status(User.UserStatus.ACTIVE)
                     .build();
         }
@@ -154,6 +156,7 @@ public class AuthService {
                 .nic(user.getNic())
                 .phoneNumber(user.getPhoneNumber())
                 .village(user.getVillage())
+                .district(user.getDistrict())
                 .profilePicture(user.getProfilePicture())   // ← THIS is the new line
                 .build();
     }

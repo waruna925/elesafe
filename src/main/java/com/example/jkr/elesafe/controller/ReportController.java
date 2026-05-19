@@ -55,10 +55,45 @@ public class ReportController {
         return ResponseEntity.ok(reportService.getRecentReports());
     }
 
+    /**
+     * GET /api/reports/village/{village}
+     * Wild Officers and Admins only. No district restriction — village lookup is
+     * cross-district by design (a village name might appear in multiple districts).
+     */
     @PreAuthorize("hasAnyRole('WILD_OFFICER', 'ADMIN')")
     @GetMapping("/village/{village}")
     public ResponseEntity<List<Report>> getReportsByVillage(@PathVariable String village) {
         return ResponseEntity.ok(reportService.getReportsByVillage(village));
+    }
+
+    /**
+     * GET /api/reports/district
+     * Returns all reports within the authenticated officer's own duty district.
+     * The district is derived automatically from the officer's profile — no
+     * query parameter is needed, preventing parameter-tampering attacks.
+     */
+    @PreAuthorize("hasAnyRole('WILD_OFFICER', 'ADMIN')")
+    @GetMapping("/district")
+    public ResponseEntity<List<Report>> getReportsByOfficerDistrict(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        String officerEmail = userDetails.getUsername();
+        List<Report> reports = reportService.getReportsByOfficerDistrict(officerEmail);
+        return ResponseEntity.ok(reports);
+    }
+
+    /**
+     * GET /api/reports/district/{district}
+     * Admins may request any district. Wild Officers may only request their own.
+     * The service layer enforces the match and throws 403 on mismatch.
+     */
+    @PreAuthorize("hasAnyRole('WILD_OFFICER', 'ADMIN')")
+    @GetMapping("/district/{district}")
+    public ResponseEntity<List<Report>> getReportsByDistrict(
+            @PathVariable String district,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        String officerEmail = userDetails.getUsername();
+        List<Report> reports = reportService.getReportsByDistrict(district, officerEmail);
+        return ResponseEntity.ok(reports);
     }
 
     @GetMapping("/{reportId}")
