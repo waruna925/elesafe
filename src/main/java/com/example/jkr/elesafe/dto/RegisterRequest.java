@@ -48,7 +48,7 @@ public class RegisterRequest {
 
     private String address;
     private String village;
-
+    private String district;
     // ✅ Optional - only required when role = WILD_OFFICER
     private String badgeNumber;
     private String station;

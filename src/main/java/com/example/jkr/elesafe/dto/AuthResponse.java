@@ -16,19 +16,15 @@ public class AuthResponse {
     private String refreshToken;
     private String tokenType;
     private long expiresIn;
-
     private String userId;
     private String email;
     private String firstName;
     private String lastName;
     private User.Role role;
     private User.UserStatus status;
-
-    // from previous steps
     private String nic;
     private String phoneNumber;
     private String village;
-
-    // ✅ NEW
+    private String district;
     private String profilePicture;
 }

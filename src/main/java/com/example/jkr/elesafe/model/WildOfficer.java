@@ -8,14 +8,18 @@ import lombok.experimental.SuperBuilder;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
-@SuperBuilder                        // ✅ inherits User builder
+@SuperBuilder                        // inherits User builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true) // ✅ include parent fields in equals/hashCode
-@Document(collection = "users")      // ✅ same collection as User
+@EqualsAndHashCode(callSuper = true) // include parent fields in equals/hashCode
+@Document(collection = "users")      // same collection as User
 public class WildOfficer extends User {
 
-    // ✅ Extra fields only for Wild Officers
+    // Extra fields only for Wild Officers
     private String badgeNumber;
     private String station;
+    // divide for district
+    public String getDutyDistrict() {
+        return getDistrict();
+    }
 }
