@@ -111,11 +111,21 @@ public class ReportController {
     }
 
     @PreAuthorize("hasRole('WILD_OFFICER')")
+    @PatchMapping("/{reportId}/status")
+    public ResponseEntity<Report> updateReportStatus(
+            @PathVariable String reportId,
+            @RequestBody ReportStatusUpdateRequest request) {
+        Report updatedReport = reportService.updateReportStatus(reportId, request.getStatus());
+        return ResponseEntity.ok(updatedReport);
+    }
+
+    /** @deprecated use PATCH /{reportId}/status */
+    @PreAuthorize("hasRole('WILD_OFFICER')")
     @PatchMapping("/damage/{reportId}/status")
     public ResponseEntity<DamageReport> updateDamageStatus(
             @PathVariable String reportId,
             @RequestBody ReportStatusUpdateRequest request) {
-        DamageReport updatedReport = reportService.updateDamageReportStatus(reportId, request.getStatus());
-        return ResponseEntity.ok(updatedReport);
+        Report updated = reportService.updateReportStatus(reportId, request.getStatus());
+        return ResponseEntity.ok((DamageReport) updated);
     }
 }

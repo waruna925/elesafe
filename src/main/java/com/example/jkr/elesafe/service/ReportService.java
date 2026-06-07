@@ -4,6 +4,7 @@ import com.example.jkr.elesafe.dto.DamageReportRequest;
 import com.example.jkr.elesafe.dto.SightingReportRequest;
 import com.example.jkr.elesafe.model.DamageReport;
 import com.example.jkr.elesafe.model.Report;
+import com.example.jkr.elesafe.model.ReportStatus;
 import com.example.jkr.elesafe.model.SightingReport;
 
 import java.util.List;
@@ -13,7 +14,7 @@ public interface ReportService {
     DamageReport submitDamageReport(DamageReportRequest request, String reporterEmail);
     List<Report> getMyReports(String reporterEmail);
     void deleteMyReport(String reportId, String reporterEmail);
-    DamageReport updateDamageReportStatus(String reportId, DamageReport.ReportStatus newStatus);
+    Report updateReportStatus(String reportId, ReportStatus newStatus);
     List<Report> getReportsByVillage(String village);
     List<Report> getRecentReports();
     Report getReportById(String reportId);

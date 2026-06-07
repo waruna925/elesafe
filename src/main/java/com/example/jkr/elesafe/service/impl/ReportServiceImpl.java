@@ -1,10 +1,12 @@
 package com.example.jkr.elesafe.service.impl;
 
 import com.example.jkr.elesafe.dto.DamageReportRequest;
+import com.example.jkr.elesafe.dto.ReportResolvedDTO;
 import com.example.jkr.elesafe.dto.SightingAlertDTO;
 import com.example.jkr.elesafe.dto.SightingReportRequest;
 import com.example.jkr.elesafe.model.DamageReport;
 import com.example.jkr.elesafe.model.Report;
+import com.example.jkr.elesafe.model.ReportStatus;
 import com.example.jkr.elesafe.model.SightingReport;
 import com.example.jkr.elesafe.model.User;
 import com.example.jkr.elesafe.repo.ReportRepository;
@@ -72,6 +74,7 @@ public class ReportServiceImpl implements ReportService {
                 .additionalNotes(request.getAdditionalNotes())
                 .imagePath(request.getImagePath())
                 .dateTime(request.getDateTime() != null ? request.getDateTime() : LocalDateTime.now())
+                .status(ReportStatus.PENDING)
                 .build();
 
         SightingReport saved = reportRepository.save(report);
@@ -105,9 +108,36 @@ public class ReportServiceImpl implements ReportService {
                 .description(request.getDescription())
                 .imagePath(request.getImagePath())
                 .dateTime(request.getDateTime() != null ? request.getDateTime() : LocalDateTime.now())
-                .status(DamageReport.ReportStatus.PENDING)
+                .status(ReportStatus.PENDING)
                 .build();
         return reportRepository.save(report);
+    }
+
+    @Override
+    public Report updateReportStatus(String reportId, ReportStatus newStatus) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found!"));
+
+        if (report instanceof DamageReport damageReport) {
+            damageReport.setStatus(newStatus);
+            Report saved = reportRepository.save(damageReport);
+            notifyResolvedIfNeeded(saved, newStatus);
+            return saved;
+        }
+        if (report instanceof SightingReport sightingReport) {
+            sightingReport.setStatus(newStatus);
+            Report saved = reportRepository.save(sightingReport);
+            notifyResolvedIfNeeded(saved, newStatus);
+            return saved;
+        }
+        throw new RuntimeException("Unsupported report type for status update!");
+    }
+
+    private void notifyResolvedIfNeeded(Report report, ReportStatus newStatus) {
+        if (newStatus == ReportStatus.RESOLVED) {
+            messagingTemplate.convertAndSend("/topic/report-resolved",
+                    ReportResolvedDTO.builder().reportId(report.getReportId()).build());
+        }
     }
 
     @Override
@@ -124,19 +154,6 @@ public class ReportServiceImpl implements ReportService {
             throw new RuntimeException("Security Alert: Unauthorized deletion attempt!");
         }
         reportRepository.deleteById(reportId);
-    }
-
-    @Override
-    public DamageReport updateDamageReportStatus(String reportId, DamageReport.ReportStatus newStatus) {
-        Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new RuntimeException("Report not found!"));
-
-        if (report instanceof DamageReport damageReport) {
-            damageReport.setStatus(newStatus);
-            return reportRepository.save(damageReport);
-        } else {
-            throw new RuntimeException("Only Damage Reports have a verifiable status!");
-        }
     }
 
     @Override
