@@ -23,8 +23,4 @@ public class DamageReport extends Report {
     public enum DamageType {
         CROP, PROPERTY, VEHICLE, HUMAN_INJURY
     }
-
-    public enum ReportStatus {
-        PENDING, VERIFIED, REJECTED, RESOLVED
-    }
 }

@@ -1,6 +1,6 @@
 package com.example.jkr.elesafe.dto;
 
-import com.example.jkr.elesafe.model.DamageReport;
+import com.example.jkr.elesafe.model.ReportStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +11,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReportStatusUpdateRequest {
-    // Captures the new status (PENDING, VERIFIED, REJECTED, RESOLVED) [cite: 110, 142]
-    private DamageReport.ReportStatus status;
+    private ReportStatus status;
 }
