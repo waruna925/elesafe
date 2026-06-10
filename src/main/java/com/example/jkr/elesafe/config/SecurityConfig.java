@@ -31,7 +31,6 @@ public class SecurityConfig {
             "/api/auth/register",       // ✅ only public auth endpoints
             "/api/auth/login",
             "/api/auth/refresh-token",
-            "/api/health",
             "/ws/**",
             "/v3/api-docs",
             "/v3/api-docs/**",
@@ -44,7 +43,8 @@ public class SecurityConfig {
             "/configuration/security",
             "/webjars/**",
             "/favicon.ico",
-            "/error"
+            "/error",
+            "/api/health"
     };
 
     @Bean
