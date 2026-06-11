@@ -1,6 +1,5 @@
 package com.example.jkr.elesafe.config;
 
-
 import com.example.jkr.elesafe.service.JwtService;
 import com.example.jkr.elesafe.service.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
@@ -27,23 +26,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsServiceImpl userDetailsService;
 
-    // These paths will completely skip JWT filter
-    private static final List<String> SKIP_PATHS = Arrays.asList(
-            "/swagger-ui",
+    // ── Paths that skip JWT validation completely ──────────────────────────
+    private static final List<String> WHITE_LIST_PATHS = Arrays.asList(
+            "/api/health",
+            "/api/auth/register",
+            "/api/auth/login",
+            "/api/auth/refresh-token",
             "/v3/api-docs",
+            "/v3/api-docs.yaml",
+            "/swagger-ui.html",
+            "/swagger-ui",
             "/swagger-resources",
             "/webjars",
-            "/api/auth/register",   // ✅ only skip register
-            "/api/auth/login",      // ✅ only skip login
-            "/api/auth/refresh-token", // ✅ only skip refresh
+            "/configuration/ui",
+            "/configuration/security",
             "/favicon.ico",
-            "/error"
+            "/error",
+            "/ws"
     );
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getServletPath();
-        return SKIP_PATHS.stream().anyMatch(path::startsWith);
+    private boolean isWhitelisted(String path) {
+        return WHITE_LIST_PATHS.stream().anyMatch(path::startsWith);
     }
 
     @Override
@@ -53,23 +56,52 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        final String path = request.getServletPath();
 
+        // ── Skip JWT check for whitelisted paths ──────────────────────────
+        if (isWhitelisted(path)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // ── Extract Authorization header ───────────────────────────────────
+        final String authHeader = request.getHeader("Authorization");
+        final String jwt;
+        final String username;
+
+        // No token present — let Spring Security handle 401
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        final String jwt = authHeader.substring(7);
-        final String userEmail = jwtService.extractUsername(jwt);
+        // ── Parse JWT token ────────────────────────────────────────────────
+        jwt = authHeader.substring(7);
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+        try {
+            username = jwtService.extractUsername(jwt);
+        } catch (Exception e) {
+            // Malformed or invalid token — reject cleanly
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\": \"Invalid or malformed JWT token\"}");
+            response.setContentType("application/json");
+            return;
+        }
+
+        // ── Authenticate if not already authenticated ──────────────────────
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
             if (jwtService.isTokenValid(jwt, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
