@@ -23,12 +23,15 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class ReportServiceImpl implements ReportService {
+
+    private static final ZoneId SRI_LANKA = ZoneId.of("Asia/Colombo");
 
     private final ReportRepository reportRepository;
     private final MongoTemplate mongoTemplate;
@@ -73,7 +76,7 @@ public class ReportServiceImpl implements ReportService {
                 .behavior(request.getBehavior())
                 .additionalNotes(request.getAdditionalNotes())
                 .imagePath(request.getImagePath())
-                .dateTime(request.getDateTime() != null ? request.getDateTime() : LocalDateTime.now())
+                .dateTime(request.getDateTime() != null ? request.getDateTime() : LocalDateTime.now(SRI_LANKA))
                 .status(ReportStatus.PENDING)
                 .build();
 
@@ -107,7 +110,7 @@ public class ReportServiceImpl implements ReportService {
                 .damageType(request.getDamageType())
                 .description(request.getDescription())
                 .imagePath(request.getImagePath())
-                .dateTime(request.getDateTime() != null ? request.getDateTime() : LocalDateTime.now())
+                .dateTime(request.getDateTime() != null ? request.getDateTime() : LocalDateTime.now(SRI_LANKA))
                 .status(ReportStatus.PENDING)
                 .build();
         return reportRepository.save(report);
@@ -172,9 +175,7 @@ public class ReportServiceImpl implements ReportService {
                 .orElseThrow(() -> new RuntimeException("Report not found with ID: " + reportId));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // District-based duty-area access control
-    // ─────────────────────────────────────────────────────────────────────────
 
     @Override
     public List<Report> getReportsByOfficerDistrict(String officerEmail) {
